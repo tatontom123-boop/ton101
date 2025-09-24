@@ -125,3 +125,127 @@
     </div>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>กราฟคะแนนนักเรียน</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F9FA;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 450px;
+            max-height: 500px;
+        }
+    </style>
+</head>
+<body class="bg-[#F8F9FA] text-gray-800">
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#264653] mb-2">สรุปคะแนนนักเรียน</h1>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto">แสดงผลคะแนนรวมของนักเรียนแต่ละคนในวิชาคณิตศาสตร์</p>
+        </header>
+
+        <main class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold text-[#264653] mb-4">คะแนนรวม</h2>
+            <p class="text-gray-600 mb-6">กราฟด้านล่างแสดงคะแนนรวมของนักเรียนแต่ละคน ซึ่งสามารถใช้เปรียบเทียบผลการเรียนรู้และหาผู้ที่ทำคะแนนได้ดีที่สุด</p>
+            <div class="chart-container">
+                <canvas id="scoresChart"></canvas>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const studentData = [
+            { name: "กรินทร์ สุขเจริญ", total: 76 },
+            { name: "พิษณุ ภาพันธ์", total: 55 },
+            { name: "ภาณุพงษ์ คือประโคน", total: 79 },
+            { name: "สรรค์ภิญญ์ เอี่ยมมาลา", total: 69 },
+            { name: "กิติกร จันทะเริง", total: 68 },
+            { name: "อชิรวิชญ์ คลื่นดอกบัว", total: 70 },
+            { name: "อนันท์ โพธิ์ศรี", total: 70 },
+            { name: "อาสา ป้อมสุวรรณ", total: 76 },
+            { name: "พัชรภัสร์ จบศรี", total: 88 },
+            { name: "พัทธ์ธีรา ส่วนชอบ", total: 81 }
+        ];
+
+        const studentNames = studentData.map(d => d.name);
+        const totalScores = studentData.map(d => d.total);
+        
+        const primaryColor = '#00A6A6';
+
+        const defaultTooltipCallback = {
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            const item = tooltipItems[0];
+                            let label = item.chart.data.labels[item.dataIndex];
+                            if (Array.isArray(label)) {
+                              return label.join(' ');
+                            } else {
+                              return label;
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        const ctx = document.getElementById('scoresChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: studentNames,
+                datasets: [{
+                    label: 'คะแนนรวม',
+                    data: totalScores,
+                    backgroundColor: primaryColor,
+                    borderColor: primaryColor,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                ...defaultTooltipCallback,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'คะแนนรวม'
+                        },
+                        ticks: {
+                            stepSize: 5
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'นักเรียน'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
