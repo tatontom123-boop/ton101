@@ -1,0 +1,127 @@
+<html>
+<head>
+    <title>Hello</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(135deg, #ff00cc 0%, #333399 100%);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .profile-card {
+            background: linear-gradient(135deg, #fff700 0%, #00ffd0 100%);
+            border: 6px solid #ff00cc;
+            box-shadow: 0 0 32px 8px #ff00cc, 0 0 64px 16px #00ffd0;
+            text-align: center;
+            max-width: 400px;
+            position: relative;
+            border-radius: 24px;
+            padding: 0 30px 30px 30px;
+            overflow: hidden;
+            animation: arcadeFadeIn 1s;
+        }
+        @keyframes arcadeFadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .profile-header {
+            background: linear-gradient(90deg, #ff00cc 0%, #00ffd0 100%);
+            color: #fff;
+            padding: 24px 0 18px 0;
+            margin-bottom: 0;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            box-shadow: 0 2px 12px #33339944;
+            font-size: 1.2rem;
+            text-shadow: 2px 2px 0 #333399, 0 0 8px #fff700;
+        }
+        .profile-card img {
+            border-radius: 12px;
+            border: 4px solid #fff700;
+            margin-top: -40px;
+            margin-bottom: 18px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 0 24px 4px #00ffd0, 0 0 8px 2px #ff00cc;
+            background: #fff;
+        }
+        .profile-card img:hover {
+            transform: scale(1.12) rotate(-2deg);
+            box-shadow: 0 0 48px 12px #ff00cc, 0 0 32px 8px #00ffd0;
+        }
+        h1 {
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+            letter-spacing: 2px;
+            font-weight: 700;
+            text-shadow: 2px 2px 0 #333399, 0 0 8px #fff700;
+        }
+        p {
+            color: #333399;
+            margin: 10px 0;
+            font-size: 0.9rem;
+            text-shadow: 1px 1px 0 #fff700;
+        }
+        .highlight {
+            color: #ff00cc;
+            font-weight: bold;
+            text-shadow: 1px 1px 0 #fff700;
+        }
+        .social-links {
+            margin-top: 18px;
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+        }
+        .social-links a {
+            display: inline-block;
+            width: 38px;
+            height: 38px;
+            background: #fff700;
+            border: 2px solid #ff00cc;
+            border-radius: 8px;
+            box-shadow: 0 0 8px #00ffd0, 0 0 4px #ff00cc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .social-links a:hover {
+            background: #ff00cc;
+            border-color: #fff700;
+            transform: scale(1.18) rotate(-3deg);
+        }
+        @media (max-width: 500px) {
+            .profile-card {
+                max-width: 95vw;
+                padding: 0 10px 20px 10px;
+            }
+            .profile-header {
+                font-size: 1.1rem;
+                padding: 16px 0 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-card">
+        <div class="profile-header">
+            <h1>Issarapong Rattanapakdee</h1>
+        </div>
+        <img src="ton2.jpg" alt="Atchara" width="200" height="300">
+        <p><span class="highlight">E-mail :</span> tatontom123@gmail.com</p>
+        <p><span class="highlight">Department :</span> Science teacher</p>
+        <p><span class="highlight">Faculty :</span> Kanghongbakkeynun school</p>
+        <div class="social-links">
+            <a href="mailto:atchara.ch@ksu.ac.th" title="Email"><svg width="22" height="22" fill="#388e3c" viewBox="0 0 24 24"><path d="M12 13.065l-11.99-7.065v14h23.98v-14zm11.99-2.065v-2l-11.99 7.065-11.99-7.065v2l11.99 7.065z"/></svg></a>
+            <a href="https://www.facebook.com" target="_blank" title="Facebook"><svg width="22" height="22" fill="#388e3c" viewBox="0 0 24 24"><path d="M22.675 0h-21.35c-.733 0-1.325.592-1.325 1.326v21.348c0 .733.592 1.326 1.325 1.326h11.495v-9.294h-3.128v-3.622h3.128v-2.672c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.797.143v3.24l-1.918.001c-1.504 0-1.797.715-1.797 1.763v2.313h3.587l-.467 3.622h-3.12v9.294h6.116c.733 0 1.325-.593 1.325-1.326v-21.349c0-.733-.592-1.325-1.325-1.325z"/></svg></a>
+            <a href="https://www.ksu.ac.th" target="_blank" title="Website"><svg width="22" height="22" fill="#388e3c" viewBox="0 0 24 24"><path d="M12 2c-5.514 0-10 4.486-10 10s4.486 10 10 10 10-4.486 10-10-4.486-10-10-10zm0 18c-4.411 0-8-3.589-8-8 0-1.104.896-2 2-2h2v2h-2c0 3.309 2.691 6 6 6s6-2.691 6-6c0-1.104-.896-2-2-2h-2v-2h2c1.104 0 2 .896 2 2 0 4.411-3.589 8-8 8z"/></svg></a>
+        </div>
+    </div>
+</body>
+</html>
