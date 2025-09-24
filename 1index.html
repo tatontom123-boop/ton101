@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรแกรมแสดงผลข้อมูลจาก URL</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .container-card {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            max-width: 90%;
+            width: 100%;
+            margin-top: 2rem;
+        }
+        .data-table-container {
+            max-height: 500px;
+            overflow-y: auto;
+            border-radius: 1rem;
+            border: 1px solid #e5e7eb;
+        }
+        th, td {
+            padding: 0.75rem 1rem;
+            white-space: nowrap;
+        }
+        th {
+            background-color: #f3f4f6;
+            text-align: left;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="container-card flex flex-col items-center">
+        <h1 class="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-4">
+            โปรแกรมแสดงผลข้อมูลจาก URL
+        </h1>
+        <p class="text-gray-600 text-center mb-6">
+            ข้อมูล CSV ถูกโหลดจาก URL ที่กำหนดไว้และแสดงผลในตารางด้านล่าง
+        </p>
+
+        <div id="loading-spinner" class="mt-8">
+            <div class="w-10 h-10 border-4 border-blue-500 border-dotted rounded-full animate-spin"></div>
+            <p class="text-gray-500 mt-2">กำลังประมวลผลข้อมูลจาก URL...</p>
+        </div>
+
+        <div id="data-container" class="w-full mt-8">
+            <!-- Table will be inserted here by JavaScript -->
+        </div>
+
+        <div id="error-message" class="mt-4 hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl relative" role="alert">
+            <span class="block sm:inline"></span>
+        </div>
+
+    </div>
+
+    <!-- PapaParse library for easy CSV parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dataContainer = document.getElementById('data-container');
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const errorMessage = document.getElementById('error-message');
+
+            // URL of the CSV file from Google Sheets
+            const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR4ECI7Xn4UviJxZxDOjsdCO6MCr5u8jBpjpodRtkK4f2rn9q79xZO_OktybiFPlxH2RNDQj0KZCzPZ/pub?gid=0&single=true&output=csv';
+
+            // Function to parse the CSV from URL
+            function parseCsvFromUrl() {
+                loadingSpinner.classList.remove('hidden');
+                dataContainer.innerHTML = '';
+                errorMessage.classList.add('hidden');
+
+                Papa.parse(csvUrl, {
+                    download: true, // This is key to fetch from a URL
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        loadingSpinner.classList.add('hidden');
+                        if (results.data.length > 0 && results.errors.length === 0) {
+                            renderTable(results.data);
+                        } else {
+                            displayError('ไม่สามารถอ่านข้อมูลจาก URL ได้ โปรดตรวจสอบว่า URL ถูกต้องหรือไม่');
+                        }
+                    },
+                    error: function(err) {
+                        loadingSpinner.classList.add('hidden');
+                        displayError('เกิดข้อผิดพลาดในการประมวลผลข้อมูลจาก URL: ' + err.message);
+                    }
+                });
+            }
+
+            function renderTable(data) {
+                if (data.length === 0) {
+                    displayError('ข้อมูลจาก URL ว่างเปล่าหรือไม่มีข้อมูล');
+                    return;
+                }
+
+                const headers = Object.keys(data[0]);
+                
+                let tableHTML = `
+                <div class="data-table-container">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                ${headers.map(header => `<th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">${header}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${data.map(row => `
+                                <tr>
+                                    ${headers.map(header => `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row[header] || ''}</td>`).join('')}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                `;
+                dataContainer.innerHTML = tableHTML;
+            }
+
+            function displayError(message) {
+                errorMessage.classList.remove('hidden');
+                errorMessage.querySelector('span').textContent = message;
+            }
+
+            // Load the data automatically when the page loads
+            parseCsvFromUrl();
+        });
+    </script>
+</body>
+</html>
