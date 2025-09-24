@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worm Shooter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6a11cb;
+            --secondary-color: #2575fc;
+            --accent-color: #ff6f61;
+            --background-color: #f0f4f8;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            position: relative;
+            background-color: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            aspect-ratio: 1 / 1;
+        }
+
+        canvas {
+            display: block;
+            background: linear-gradient(to bottom, #87ceeb, #f0f4f8);
+        }
+
+        .ui-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            pointer-events: none; /* Allows clicks to pass through to the canvas */
+        }
+
+        .game-info {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        #game-over-message {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.5s ease;
+        }
+
+        #game-over-message.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .control-button {
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            background: var(--primary-color);
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .control-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-button:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div class="ui-panel">
+            <div id="scoreDisplay">Score: 0</div>
+            <div id="livesDisplay">Lives: 3</div>
+        </div>
+        <div class="game-info">
+            <h1 id="game-over-message">Game Over</h1>
+            <button class="control-button" id="startButton">Start Game</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const startButton = document.getElementById('startButton');
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const livesDisplay = document.getElementById('livesDisplay');
+            const gameOverMessage = document.getElementById('game-over-message');
+
+            let score = 0;
+            let lives = 3;
+            let gameStarted = false;
+            let gameOver = false;
+            let lastSpawnTime = 0;
+            const spawnInterval = 1000; // ms
+
+            // Game objects arrays
+            let worms = [];
+            let bullets = [];
+
+            // Game variables
+            let lastFrameTime = 0;
+            const wormSpeedMultiplier = 0.5;
+            const bulletSpeed = 5;
+
+            function resizeCanvas() {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.width;
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            // Turret SVG (inline)
+            const turretSVG = `<svg width="100%" height="100%" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <path d="M 10 90 Q 50 10 90 90 Z" fill="#6c5ce7" stroke="#4834d4" stroke-width="5" />
+                <rect x="35" y="70" width="30" height="20" rx="5" ry="5" fill="#a29bfe" />
+                <circle cx="50" cy="90" r="10" fill="#a29bfe" />
+            </svg>`;
+
+            const wormSVG = `<svg width="100%" height="100%" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <path d="M 10 50 Q 30 20 50 50 T 90 50 C 95 60 95 40 90 50 Q 70 80 50 50 T 10 50 Z" fill="#2d98da" />
+                <circle cx="25" cy="45" r="5" fill="#fff" />
+                <circle cx="75" cy="45" r="5" fill="#fff" />
+                <circle cx="25" cy="45" r="2.5" fill="#000" />
+                <circle cx="75" cy="45" r="2.5" fill="#000" />
+            </svg>`;
+
+            class Worm {
+                constructor() {
+                    this.radius = Math.random() * 20 + 20; // Worms of different sizes
+                    this.x = Math.random() * canvas.width;
+                    this.y = -this.radius;
+                    this.speed = (Math.random() + 0.5) * wormSpeedMultiplier;
+                    this.color = `#${Math.floor(Math.random()*16777215).toString(16)}`;
+                    this.svg = new Image();
+                    this.svg.src = 'data:image/svg+xml;base64,' + btoa(wormSVG);
+                }
+
+                update(deltaTime) {
+                    this.y += this.speed * deltaTime;
+                }
+
+                draw() {
+                    ctx.drawImage(this.svg, this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
+                }
+            }
+
+            class Bullet {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.radius = 5;
+                    this.speed = bulletSpeed;
+                    this.color = '#ffcc00';
+                }
+
+                update(deltaTime) {
+                    this.y -= this.speed * deltaTime;
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            }
+
+            function drawTurret() {
+                const turretImage = new Image();
+                turretImage.src = 'data:image/svg+xml;base64,' + btoa(turretSVG);
+                const turretSize = canvas.width * 0.15;
+                const turretX = canvas.width / 2 - turretSize / 2;
+                const turretY = canvas.height - turretSize;
+                ctx.drawImage(turretImage, turretX, turretY, turretSize, turretSize);
+            }
+
+            function updateGame(deltaTime) {
+                // Update worms
+                worms.forEach((worm, index) => {
+                    worm.update(deltaTime);
+                    if (worm.y > canvas.height + worm.radius) {
+                        // Worm reached the bottom
+                        worms.splice(index, 1);
+                        lives--;
+                        updateLivesDisplay();
+                        if (lives <= 0) {
+                            endGame();
+                        }
+                    }
+                });
+
+                // Update bullets
+                bullets.forEach((bullet, index) => {
+                    bullet.update(deltaTime);
+                    if (bullet.y < 0) {
+                        bullets.splice(index, 1);
+                    }
+                });
+
+                // Collision detection
+                for (let i = bullets.length - 1; i >= 0; i--) {
+                    for (let j = worms.length - 1; j >= 0; j--) {
+                        const bullet = bullets[i];
+                        const worm = worms[j];
+                        const distance = Math.hypot(bullet.x - worm.x, bullet.y - worm.y);
+                        if (distance < bullet.radius + worm.radius * 0.8) {
+                            // Collision detected
+                            bullets.splice(i, 1);
+                            worms.splice(j, 1);
+                            score += 10;
+                            updateScoreDisplay();
+                            break; // Exit inner loop to prevent issues with spliced arrays
+                        }
+                    }
+                }
+
+                // Spawn new worms
+                if (Date.now() - lastSpawnTime > spawnInterval) {
+                    worms.push(new Worm());
+                    lastSpawnTime = Date.now();
+                }
+            }
+
+            function drawGame() {
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Background gradient
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#87ceeb');
+                gradient.addColorStop(1, '#f0f4f8');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw all game objects
+                drawTurret();
+                worms.forEach(worm => worm.draw());
+                bullets.forEach(bullet => bullet.draw());
+            }
+
+            function gameLoop(timestamp) {
+                if (gameOver) return;
+
+                const deltaTime = timestamp - lastFrameTime;
+                lastFrameTime = timestamp;
+
+                updateGame(deltaTime);
+                drawGame();
+
+                requestAnimationFrame(gameLoop);
+            }
+
+            function startGame() {
+                gameStarted = true;
+                gameOver = false;
+                score = 0;
+                lives = 3;
+                worms = [];
+                bullets = [];
+                lastSpawnTime = 0;
+                
+                startButton.style.display = 'none';
+                gameOverMessage.classList.remove('visible');
+                updateScoreDisplay();
+                updateLivesDisplay();
+                
+                lastFrameTime = performance.now();
+                requestAnimationFrame(gameLoop);
+            }
+
+            function endGame() {
+                gameOver = true;
+                startButton.style.display = 'block';
+                gameOverMessage.classList.add('visible');
+            }
+
+            function updateScoreDisplay() {
+                scoreDisplay.textContent = `Score: ${score}`;
+            }
+
+            function updateLivesDisplay() {
+                livesDisplay.textContent = `Lives: ${lives}`;
+            }
+
+            // Event listeners
+            startButton.addEventListener('click', startGame);
+
+            canvas.addEventListener('click', (event) => {
+                if (gameStarted && !gameOver) {
+                    const rect = canvas.getBoundingClientRect();
+                    const clickX = event.clientX - rect.left;
+                    const clickY = event.clientY - rect.top;
+                    
+                    const turretX = canvas.width / 2;
+                    const turretY = canvas.height * 0.9;
+                    
+                    bullets.push(new Bullet(turretX, turretY));
+                }
+            });
+
+            // Initial state
+            updateScoreDisplay();
+            updateLivesDisplay();
+            drawGame(); // Draw initial screen
+        });
+    </script>
+</body>
+</html>
